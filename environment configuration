@@ -1,0 +1,23 @@
+#--------------------------------------------------------------------
+# Example Environment Configuration for CodeIgniter 4
+#--------------------------------------------------------------------
+
+# Development environment
+CI_ENVIRONMENT = development
+
+#--------------------------------------------------------------------
+# DATABASE
+#--------------------------------------------------------------------
+database.default.hostname = localhost
+database.default.database = your_database_name
+database.default.username = your_database_user
+database.default.password = your_database_password
+database.default.DBDriver = MySQLi
+database.default.DBPrefix =
+database.default.port = 3306
+
+#--------------------------------------------------------------------
+# JWT Configuration
+#--------------------------------------------------------------------
+jwt.secret = A_RANDOM_SECRET_KEY_FOR_YOUR_APPLICATION
+jwt.timeToLive = 3600 # Token expiration in seconds (e.g., 1 hour)

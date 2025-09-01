@@ -1,0 +1,22 @@
+<?php namespace App\Controllers;
+
+use CodeIgniter\API\ResponseTrait;
+use App\Models\TeacherModel;
+
+class TeachersController extends BaseController
+{
+    use ResponseTrait;
+
+    protected $teacherModel;
+
+    public function __construct()
+    {
+        $this->teacherModel = new TeacherModel();
+    }
+    
+    public function getTeachers()
+    {
+        $teachers = $this->teacherModel->findAll();
+        return $this->respond($teachers);
+    }
+}

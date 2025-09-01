@@ -1,0 +1,26 @@
+-- -- Table structure for table auth_user
+CREATE TABLE auth_user (
+id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+email VARCHAR(255) NOT NULL,
+first_name VARCHAR(50) DEFAULT NULL,
+last_name VARCHAR(50) DEFAULT NULL,
+password VARCHAR(255) NOT NULL,
+created_at DATETIME NOT NULL,
+updated_at DATETIME NOT NULL,
+PRIMARY KEY (id),
+UNIQUE KEY email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- -- Table structure for table teachers
+CREATE TABLE teachers (
+id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+user_id INT(11) UNSIGNED NOT NULL,
+university_name VARCHAR(255) DEFAULT NULL,
+gender VARCHAR(10) DEFAULT NULL,
+year_joined INT(4) DEFAULT NULL,
+created_at DATETIME NOT NULL,
+updated_at DATETIME NOT NULL,
+PRIMARY KEY (id),
+UNIQUE KEY user_id (user_id),
+CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES auth_user (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

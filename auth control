@@ -1,0 +1,132 @@
+<?php namespace App\Controllers;
+
+use CodeIgniter\API\ResponseTrait;
+use App\Models\UserModel;
+use App\Models\TeacherModel;
+use Firebase\JWT\JWT;
+
+class AuthController extends BaseController
+{
+    use ResponseTrait;
+
+    protected $userModel;
+    protected $teacherModel;
+
+    public function __construct()
+    {
+        $this->userModel = new UserModel();
+        $this->teacherModel = new TeacherModel();
+    }
+
+    public function login()
+    {
+        $rules = [
+            'email' => 'required|valid_email',
+            'password' => 'required'
+        ];
+
+        if (!$this->validate($rules)) {
+            return $this->fail($this->validator->getErrors());
+        }
+
+        $email = $this->request->getVar('email');
+        $password = $this->request->getVar('password');
+
+        $user = $this->userModel->where('email', $email)->first();
+
+        if (!$user) {
+            return $this->failNotFound('User not found.');
+        }
+
+        if (!password_verify($password, $user['password'])) {
+            return $this->failUnauthorized('Invalid credentials.');
+        }
+
+        $key = env('jwt.secret');
+        $payload = [
+            'iat' => time(),
+            'exp' => time() + (int)env('jwt.timeToLive'),
+            'uid' => $user['id'],
+            'email' => $user['email'],
+        ];
+
+        $token = JWT::encode($payload, $key, 'HS256');
+
+        return $this->respond([
+            'message' => 'Login successful',
+            'token' => $token
+        ]);
+    }
+
+    public function registerTeacher()
+    {
+        $rules = [
+            'email' => 'required|valid_email|is_unique[auth_user.email]',
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'password' => 'required|min_length[8]',
+            'university_name' => 'required',
+            'gender' => 'required',
+            'year_joined' => 'required|integer',
+        ];
+
+        if (!$this->validate($rules)) {
+            return $this->fail($this->validator->getErrors());
+        }
+
+        $userData = [
+            'email' => $this->request->getVar('email'),
+            'first_name' => $this->request->getVar('first_name'),
+            'last_name' => $this->request->getVar('last_name'),
+            'password' => $this->request->getVar('password'),
+        ];
+        
+        $teacherData = [
+            'university_name' => $this->request->getVar('university_name'),
+            'gender' => $this->request->getVar('gender'),
+            'year_joined' => $this->request->getVar('year_joined'),
+        ];
+        
+        $db = \Config\Database::connect();
+        $db->transBegin();
+        
+        try {
+            $this->userModel->insert($userData);
+            $userId = $this->userModel->getInsertID();
+
+            $teacherData['user_id'] = $userId;
+            $this->teacherModel->insert($teacherData);
+            
+            if ($db->transStatus() === false) {
+                $db->transRollback();
+                return $this->fail('Registration failed. Please try again.');
+            }
+            
+            $db->transCommit();
+
+            $key = env('jwt.secret');
+            $payload = [
+                'iat' => time(),
+                'exp' => time() + (int)env('jwt.timeToLive'),
+                'uid' => $userId,
+                'email' => $userData['email'],
+            ];
+            $token = JWT::encode($payload, $key, 'HS256');
+
+            return $this->respondCreated([
+                'message' => 'Registration successful',
+                'token' => $token
+            ]);
+
+        } catch (\Exception $e) {
+            $db->transRollback();
+            return $this->fail('An error occurred during registration.');
+        }
+    }
+    
+    public function getUsers()
+    {
+        $users = $this->userModel->findAll();
+        return $this->respond($users);
+    }
+}

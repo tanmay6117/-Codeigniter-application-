@@ -1,0 +1,16 @@
+<?php
+
+use CodeIgniter\Router\RouteCollection;
+
+/**
+ * @var RouteCollection $routes
+ */
+$routes->group('api', function ($routes) {
+    // Public routes (no authentication required)
+    $routes->post('login', 'AuthController::login');
+    $routes->post('register-teacher', 'AuthController::registerTeacher');
+
+    // Protected routes (require a valid JWT token)
+    $routes->get('users', 'AuthController::getUsers', ['filter' => 'auth']);
+    $routes->get('teachers', 'TeachersController::getTeachers', ['filter' => 'auth']);
+});

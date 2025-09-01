@@ -1,0 +1,57 @@
+<?php namespace App\Filters;
+
+use CodeIgniter\Filters\FilterInterface;
+use CodeIgniter\HTTP\RequestInterface;
+use CodeIgniter\HTTP\ResponseInterface;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
+class AuthFilter implements FilterInterface
+{
+    /**
+     * Do a before-action filter.
+     *
+     * @param RequestInterface $request
+     * @param array|null       $arguments
+     *
+     * @return mixed
+     */
+    public function before(RequestInterface $request, $arguments = null)
+    {
+        $key = env('jwt.secret');
+        $header = $request->getServer('HTTP_AUTHORIZATION');
+        
+        if (!$header) {
+            $response = service('response');
+            $response->setBody('Token not provided');
+            $response->setStatusCode(401);
+            return $response;
+        }
+
+        $token = str_replace('Bearer ', '', $header);
+
+        try {
+            $decoded = JWT::decode($token, new Key($key, 'HS256'));
+            // You can now access the payload, e.g., $decoded->uid
+        } catch (\Exception $e) {
+            $response = service('response');
+            $response->setBody('Invalid or expired token');
+            $response->setStatusCode(401);
+            return $response;
+        }
+    }
+
+    /**
+     * Allows after-action filters to inspect and/or modify the response.
+     *
+     * @param RequestInterface  $request
+     * @param ResponseInterface $response
+     * @param array|null        $arguments
+     *
+     * @return mixed
+     */
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
+    {
+        // No action needed after the request is processed
+    }
+}
